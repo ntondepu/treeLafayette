@@ -17,9 +17,13 @@ if uploaded_file:
     sheet_names = xls.sheet_names
     st.sidebar.success(f"Loaded sheets: {', '.join(sheet_names)}")
 
-    # Assume sheet names for now (change based on actual Excel structure)
-    planting_df = xls.parse(sheet_names[0])
-    summary_df = xls.parse(sheet_names[1])
+    # Try to parse the first two sheets
+    try:
+        planting_df = xls.parse(sheet_names[0])
+        summary_df = xls.parse(sheet_names[1])
+    except Exception as e:
+        st.error(f"Error reading sheets: {e}")
+        st.stop()
 
 else:
     st.warning("Please upload an Excel file with multiple sheets (e.g., planting data + summary).")
@@ -61,4 +65,3 @@ with tab4:
     selected_sheet = st.selectbox("Select sheet to view", sheet_names)
     df_selected = xls.parse(selected_sheet)
     st.dataframe(df_selected)
-
