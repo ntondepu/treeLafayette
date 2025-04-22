@@ -4,32 +4,54 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
 
-st.set_page_config(page_title="Tree Lafayette Dashboard", layout="wide")
 
-st.title("Tree Lafayette Growth & Survival Dashboard")
-
-# --- File Upload ---
-st.sidebar.header("Upload Data")
-uploaded_file = st.sidebar.file_uploader("Upload Excel file", type=["xlsx"])
-
-if uploaded_file:
-    xls = pd.ExcelFile(uploaded_file)
-    sheet_names = xls.sheet_names
-    st.sidebar.success(f"Loaded sheets: {', '.join(sheet_names)}")
-
-    # Attempt to load relevant sheets
+# --- Data Loading Function ---
+def load_data(default_path: str, file_type: str = "csv"):
+    """
+    Loads default data from the repo, but allows user upload to override.
+    
+    Parameters:
+        default_path (str): Path to the default CSV or Excel file.
+        file_type (str): "csv" or "excel"
+    
+    Returns:
+        pd.DataFrame: The loaded DataFrame.
+    """
+    uploaded_file = st.sidebar.file_uploader(f"Upload a new {file_type.upper()} file to override", type=["csv", "xlsx"])
+    
+    if uploaded_file:
+        try:
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+            st.sidebar.success("Uploaded file loaded successfully.")
+            return df
+        except Exception as e:
+            st.sidebar.error(f"Failed to load uploaded file: {e}")
+    
+    # Fallback to default
     try:
-        planting_df = xls.parse(sheet_names[0])
-        summary_df = xls.parse(sheet_names[1])
+        if file_type == "csv":
+            df = pd.read_csv(default_path)
+        else:
+            df = pd.read_excel(default_path)
+        st.sidebar.info("Using default dataset from repository.")
+        return df
     except Exception as e:
-        st.error(f"Error reading Excel file: {e}")
-        st.stop()
+        st.sidebar.error(f"Failed to load default file: {e}")
+        return pd.DataFrame()
 
-else:
-    st.warning("Please upload an Excel file with tree data.")
-    st.stop()
+# --- Streamlit App Logic ---
+# Default paths (replace with your actual repo paths)
+default_planting_path = "tree_survival_summary.csv"
+default_summary_path = "inventory_site_codes.csv"
 
-# --- Tabs ---
+# Load data (with the option to upload new files)
+planting_df = load_data(default_planting_path, file_type="csv")
+summary_df = load_data(default_summary_path, file_type="csv")
+
+# --- Streamlit Tabs ---
 overview_tab, survival_tab, map_tab, explorer_tab = st.tabs([
     "Overview", "Survival Analysis", "Geographic View", "Data Explorer"
 ])
@@ -100,9 +122,9 @@ with map_tab:
 with explorer_tab:
     st.header("Data Explorer")
 
-    selected_sheet = st.selectbox("Choose a sheet to explore", sheet_names)
-    df = xls.parse(selected_sheet)
-
-    st.dataframe(df)
-
-    st.markdown("Search and filter using the sidebar or browser tools.")
+    selected_sheet = st.selectbox("Choose a sheet to explore", ["planting_df", "summary_df"])
+    
+    if selected_sheet == "planting_df":
+        st.dataframe(planting_df)
+    else:
+        st.dataframe(summary_df)
