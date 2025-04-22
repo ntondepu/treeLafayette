@@ -68,37 +68,45 @@ with overview_tab:
         st.bar_chart(year_counts)
 
 # --- 2. Survival Analysis ---
-
-# Normalize and rename summary_df columns
-summary_df.columns = summary_df.columns.str.strip().str.lower()
-summary_df = summary_df.rename(columns={
-    "yr planted": "year planted",
-    "species": "species",
-    "site": "site",
-    "number planted": "number_planted",
-    "number alive": "number_alive"
-})
-
-# Calculate survival rate if needed
-if {"number_alive", "number_planted"}.issubset(summary_df.columns):
-    summary_df["survival rate (%)"] = (summary_df["number_alive"] / summary_df["number_planted"]) * 100
-
-# Capitalize column names for display compatibility
-summary_df.columns = [col.title() for col in summary_df.columns]
-
 with survival_tab:
     st.header("Survival Analysis")
 
+    # Strip and rename columns to ensure consistent names
+    summary_df.columns = summary_df.columns.str.strip()
+
+    rename_map = {
+        "Yr planted": "Year Planted",
+        "Species Name": "Species",
+        "Site Code": "Site",
+        "No. Alive": "Number alive",
+        "No. Planted": "Number planted"
+    }
+    summary_df.rename(columns=rename_map, inplace=True)
+
+    # Check and compute Survival Rate (%)
+    if "Number alive" in summary_df.columns and "Number planted" in summary_df.columns:
+        summary_df["Survival Rate (%)"] = (summary_df["Number alive"] / summary_df["Number planted"]) * 100
+    else:
+        st.warning("Missing columns: 'Number alive' or 'Number planted' to compute survival rate.")
+
+    # Show column names for debugging
+    st.write("Summary Data Columns:", summary_df.columns.tolist())
+
+    # Required columns
     required_columns = {"Species", "Site", "Year Planted", "Survival Rate (%)"}
+
     if required_columns.issubset(summary_df.columns):
+        # Survival by Species
         st.subheader("Survival by Species")
         species_survival = summary_df.groupby("Species")["Survival Rate (%)"].mean().sort_values(ascending=False)
         st.bar_chart(species_survival)
 
+        # Survival by Site
         st.subheader("Survival by Site")
         site_survival = summary_df.groupby("Site")["Survival Rate (%)"].mean().sort_values()
         st.line_chart(site_survival)
 
+        # Survival by Year
         st.subheader("Survival by Year")
         year_survival = summary_df.groupby("Year Planted")["Survival Rate (%)"].mean()
         st.line_chart(year_survival)
