@@ -4,18 +4,11 @@ import plotly.express as px
 
 # --- Data Loading Function ---
 def load_data(default_path: str, file_type: str = "csv", key: str = "data_file_uploader"):
-    """
-    Loads default data from the repo, but allows user upload to override.
-    
-    Parameters:
-        default_path (str): Path to the default CSV or Excel file.
-        file_type (str): "csv" or "excel"
-        key (str): Unique key for the file uploader element.
-    
-    Returns:
-        pd.DataFrame: The loaded DataFrame.
-    """
-    uploaded_file = st.sidebar.file_uploader(f"Upload a new {file_type.upper()} file to override", type=["csv", "xlsx"], key=key)
+    uploaded_file = st.sidebar.file_uploader(
+        f"Upload a new {file_type.upper()} file to override", 
+        type=["csv", "xlsx"], 
+        key=key
+    )
     
     if uploaded_file:
         try:
@@ -28,7 +21,6 @@ def load_data(default_path: str, file_type: str = "csv", key: str = "data_file_u
         except Exception as e:
             st.sidebar.error(f"Failed to load uploaded file: {e}")
     
-    # Fallback to default
     try:
         if file_type == "csv":
             df = pd.read_csv(default_path)
@@ -41,15 +33,13 @@ def load_data(default_path: str, file_type: str = "csv", key: str = "data_file_u
         return pd.DataFrame()
 
 # --- Streamlit App Logic ---
-# Default paths (replace with your actual repo paths)
 default_planting_path = "tree_survival_summary.csv"
 default_summary_path = "inventory_site_codes.csv"
 default_greenbush_path = "greenbush_trees.csv"
 
-# Load data (with the option to upload new files)
-planting_df = load_data(default_planting_path, file_type="csv", key="planting_file_uploader")
-summary_df = load_data(default_summary_path, file_type="csv", key="summary_file_uploader")
-greenbush_df = load_data(default_greenbush_path, file_type="csv", key="greenbush_file_uploader")
+planting_df = load_data(default_planting_path, "csv", "planting_file_uploader")
+summary_df = load_data(default_summary_path, "csv", "summary_file_uploader")
+greenbush_df = load_data(default_greenbush_path, "csv", "greenbush_file_uploader")
 
 # --- Streamlit Tabs ---
 overview_tab, survival_tab, map_tab, explorer_tab = st.tabs([
@@ -79,38 +69,41 @@ with overview_tab:
 
 # --- 2. Survival Analysis ---
 
-summary_df.columns = summary_df.columns.str.strip()
-summary_df = summary_df.rename(columns={"Yr planted": "Year Planted"})
+# Normalize and rename summary_df columns
+summary_df.columns = summary_df.columns.str.strip().str.lower()
+summary_df = summary_df.rename(columns={
+    "yr planted": "year planted",
+    "species": "species",
+    "site": "site",
+    "number planted": "number_planted",
+    "number alive": "number_alive"
+})
 
-# Calculate Survival Rate (%)
-summary_df["Survival Rate (%)"] = (summary_df["Number alive"] / summary_df["Number planted"]) * 100
+# Calculate survival rate if needed
+if {"number_alive", "number_planted"}.issubset(summary_df.columns):
+    summary_df["survival rate (%)"] = (summary_df["number_alive"] / summary_df["number_planted"]) * 100
 
-# Survival Analysis Tab
+# Capitalize column names for display compatibility
+summary_df.columns = [col.title() for col in summary_df.columns]
+
 with survival_tab:
     st.header("Survival Analysis")
 
-    # Required columns
     required_columns = {"Species", "Site", "Year Planted", "Survival Rate (%)"}
-
     if required_columns.issubset(summary_df.columns):
-        # Survival by Species
         st.subheader("Survival by Species")
         species_survival = summary_df.groupby("Species")["Survival Rate (%)"].mean().sort_values(ascending=False)
         st.bar_chart(species_survival)
 
-        # Survival by Site
         st.subheader("Survival by Site")
         site_survival = summary_df.groupby("Site")["Survival Rate (%)"].mean().sort_values()
         st.line_chart(site_survival)
 
-        # Survival by Year
         st.subheader("Survival by Year")
         year_survival = summary_df.groupby("Year Planted")["Survival Rate (%)"].mean()
         st.line_chart(year_survival)
-
     else:
         st.warning("Missing required columns for survival analysis: Species, Site, Year Planted, Survival Rate (%).")
-
 
 # --- 3. Geographic View ---
 with map_tab:
