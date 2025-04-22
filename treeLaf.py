@@ -79,27 +79,38 @@ with overview_tab:
 
 # --- 2. Survival Analysis ---
 
-summary_df["Survival Rate (%)"] = (summary_df["Number alive"] / summary_df["Number planted"]) * 100
+summary_df.columns = summary_df.columns.str.strip()
 summary_df = summary_df.rename(columns={"Yr planted": "Year Planted"})
 
+# Calculate Survival Rate (%)
+summary_df["Survival Rate (%)"] = (summary_df["Number alive"] / summary_df["Number planted"]) * 100
+
+# Survival Analysis Tab
 with survival_tab:
     st.header("Survival Analysis")
+
+    # Required columns
     required_columns = {"Species", "Site", "Year Planted", "Survival Rate (%)"}
 
     if required_columns.issubset(summary_df.columns):
+        # Survival by Species
         st.subheader("Survival by Species")
         species_survival = summary_df.groupby("Species")["Survival Rate (%)"].mean().sort_values(ascending=False)
         st.bar_chart(species_survival)
 
+        # Survival by Site
         st.subheader("Survival by Site")
         site_survival = summary_df.groupby("Site")["Survival Rate (%)"].mean().sort_values()
         st.line_chart(site_survival)
 
+        # Survival by Year
         st.subheader("Survival by Year")
         year_survival = summary_df.groupby("Year Planted")["Survival Rate (%)"].mean()
         st.line_chart(year_survival)
+
     else:
-        st.warning("Missing required columns for survival analysis.")
+        st.warning("Missing required columns for survival analysis: Species, Site, Year Planted, Survival Rate (%).")
+
 
 # --- 3. Geographic View ---
 with map_tab:
