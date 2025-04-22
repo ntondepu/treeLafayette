@@ -2,66 +2,107 @@ import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.set_page_config(page_title="Tree Lafayette Dashboard", layout="wide")
 
-st.title("🌳 Tree Lafayette Dashboard")
+st.title("Tree Lafayette Growth & Survival Dashboard")
 
-# --- Upload Section ---
-st.sidebar.header("📁 Upload Tree Data")
+# --- File Upload ---
+st.sidebar.header("Upload Data")
 uploaded_file = st.sidebar.file_uploader("Upload Excel file", type=["xlsx"])
 
 if uploaded_file:
-    # Load all sheets from Excel
     xls = pd.ExcelFile(uploaded_file)
     sheet_names = xls.sheet_names
     st.sidebar.success(f"Loaded sheets: {', '.join(sheet_names)}")
 
-    # Try to parse the first two sheets
+    # Attempt to load relevant sheets
     try:
         planting_df = xls.parse(sheet_names[0])
         summary_df = xls.parse(sheet_names[1])
     except Exception as e:
-        st.error(f"Error reading sheets: {e}")
+        st.error(f"Error reading Excel file: {e}")
         st.stop()
 
 else:
-    st.warning("Please upload an Excel file with multiple sheets (e.g., planting data + summary).")
+    st.warning("Please upload an Excel file with tree data.")
     st.stop()
 
 # --- Tabs ---
-tab1, tab2, tab3, tab4 = st.tabs(["🌲 Overview", "📈 Health & Growth", "📋 Species Summary", "🧪 Raw Data"])
+overview_tab, survival_tab, map_tab, explorer_tab = st.tabs([
+    "Overview", "Survival Analysis", "Geographic View", "Data Explorer"
+])
 
-# --- Overview Tab ---
-with tab1:
-    st.header("🌲 Overview: Tree Planting Projects")
-    st.write(f"Total records: {len(planting_df)}")
+# --- 1. Overview Tab ---
+with overview_tab:
+    st.header("Overview")
+    
+    if "Species" in planting_df.columns:
+        st.metric("Total Trees Planted", len(planting_df))
 
-    if 'Year Planted' in planting_df.columns:
-        fig1, ax1 = plt.subplots()
-        sns.countplot(data=planting_df, x="Year Planted", ax=ax1)
-        plt.xticks(rotation=45)
-        st.pyplot(fig1)
+    if "Survival Rate (%)" in summary_df.columns:
+        avg_survival = summary_df["Survival Rate (%)"].mean()
+        st.metric("Average Survival Rate", f"{avg_survival:.1f}%")
 
-# --- Health & Growth Tab ---
-with tab2:
-    st.header("📈 Tree Health & Growth Over Time")
-    if "Trunk Diameter (in.)" in planting_df.columns and "Year Planted" in planting_df.columns:
-        fig2, ax2 = plt.subplots()
-        sns.boxplot(data=planting_df, x="Year Planted", y="Trunk Diameter (in.)", ax=ax2)
-        plt.xticks(rotation=45)
-        st.pyplot(fig2)
+    if "Species" in planting_df.columns:
+        species_counts = planting_df["Species"].value_counts().reset_index()
+        species_counts.columns = ["Species", "Count"]
+        fig = px.bar(species_counts, x="Species", y="Count", title="Tree Count by Species")
+        st.plotly_chart(fig)
 
-# --- Species Summary Tab ---
-with tab3:
-    st.header("📋 Summary by Species / Genus")
-    if "Species" in summary_df.columns and "Avg Growth Rate" in summary_df.columns:
-        top_species = summary_df.sort_values(by="Avg Growth Rate", ascending=False).head(10)
-        st.bar_chart(top_species.set_index("Species")["Avg Growth Rate"])
+    if "Year Planted" in planting_df.columns:
+        year_counts = planting_df["Year Planted"].value_counts().sort_index()
+        st.bar_chart(year_counts)
 
-# --- Data Explorer Tab ---
-with tab4:
-    st.header("🧪 Explore Raw Data")
-    selected_sheet = st.selectbox("Select sheet to view", sheet_names)
-    df_selected = xls.parse(selected_sheet)
-    st.dataframe(df_selected)
+# --- 2. Survival Analysis ---
+with survival_tab:
+    st.header("Survival Analysis")
+
+    if {"Species", "Site", "Year Planted", "Survival Rate (%)"}.issubset(summary_df.columns):
+        st.subheader("Survival by Species")
+        species_survival = summary_df.groupby("Species")["Survival Rate (%)"].mean().sort_values(ascending=False)
+        st.bar_chart(species_survival)
+
+        st.subheader("Survival by Site")
+        site_survival = summary_df.groupby("Site")["Survival Rate (%)"].mean().sort_values()
+        st.line_chart(site_survival)
+
+        st.subheader("Survival by Year")
+        if "Year" in summary_df.columns:
+            year_survival = summary_df.groupby("Year")["Survival Rate (%)"].mean()
+            st.line_chart(year_survival)
+
+# --- 3. Geographic View ---
+with map_tab:
+    st.header("Geographic View")
+
+    if {"Latitude", "Longitude", "Species", "Survival Rate (%)", "Year Planted"}.issubset(planting_df.columns):
+        selected_species = st.selectbox("Filter by species", planting_df["Species"].unique())
+        filtered_map_df = planting_df[planting_df["Species"] == selected_species]
+
+        fig_map = px.scatter_mapbox(
+            filtered_map_df,
+            lat="Latitude",
+            lon="Longitude",
+            color="Survival Rate (%)",
+            size_max=15,
+            zoom=11,
+            mapbox_style="open-street-map",
+            hover_name="Species",
+            hover_data=["Site", "Year Planted"]
+        )
+        st.plotly_chart(fig_map)
+    else:
+        st.info("Map requires 'Latitude', 'Longitude', 'Species', 'Survival Rate (%)', and 'Year Planted' columns.")
+
+# --- 4. Data Explorer ---
+with explorer_tab:
+    st.header("Data Explorer")
+
+    selected_sheet = st.selectbox("Choose a sheet to explore", sheet_names)
+    df = xls.parse(selected_sheet)
+
+    st.dataframe(df)
+
+    st.markdown("Search and filter using the sidebar or browser tools.")
