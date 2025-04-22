@@ -1,23 +1,21 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 import plotly.express as px
 
-
 # --- Data Loading Function ---
-def load_data(default_path: str, file_type: str = "csv"):
+def load_data(default_path: str, file_type: str = "csv", key: str = "data_file_uploader"):
     """
     Loads default data from the repo, but allows user upload to override.
     
     Parameters:
         default_path (str): Path to the default CSV or Excel file.
         file_type (str): "csv" or "excel"
+        key (str): Unique key for the file uploader element.
     
     Returns:
         pd.DataFrame: The loaded DataFrame.
     """
-    uploaded_file = st.sidebar.file_uploader(f"Upload a new {file_type.upper()} file to override", type=["csv", "xlsx"])
+    uploaded_file = st.sidebar.file_uploader(f"Upload a new {file_type.upper()} file to override", type=["csv", "xlsx"], key=key)
     
     if uploaded_file:
         try:
@@ -46,10 +44,12 @@ def load_data(default_path: str, file_type: str = "csv"):
 # Default paths (replace with your actual repo paths)
 default_planting_path = "tree_survival_summary.csv"
 default_summary_path = "inventory_site_codes.csv"
+default_greenbush_path = "greenbush_trees.csv"
 
 # Load data (with the option to upload new files)
-planting_df = load_data(default_planting_path, file_type="csv")
-summary_df = load_data(default_summary_path, file_type="csv")
+planting_df = load_data(default_planting_path, file_type="csv", key="planting_file_uploader")
+summary_df = load_data(default_summary_path, file_type="csv", key="summary_file_uploader")
+greenbush_df = load_data(default_greenbush_path, file_type="csv", key="greenbush_file_uploader")
 
 # --- Streamlit Tabs ---
 overview_tab, survival_tab, map_tab, explorer_tab = st.tabs([
@@ -122,9 +122,11 @@ with map_tab:
 with explorer_tab:
     st.header("Data Explorer")
 
-    selected_sheet = st.selectbox("Choose a sheet to explore", ["planting_df", "summary_df"])
+    selected_sheet = st.selectbox("Choose a sheet to explore", ["planting_df", "summary_df", "greenbush_df"])
     
     if selected_sheet == "planting_df":
         st.dataframe(planting_df)
-    else:
+    elif selected_sheet == "summary_df":
         st.dataframe(summary_df)
+    else:
+        st.dataframe(greenbush_df)
