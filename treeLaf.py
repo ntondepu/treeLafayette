@@ -137,7 +137,7 @@ with map_tab:
     else:
         st.info("Map requires 'Latitude', 'Longitude', 'Species', 'Survival Rate (%)', and 'Year Planted' columns.")
 
-# --- 4. Data Explorer ---
+# --- 4. Data Explorer --- 
 with explorer_tab:
     st.header("Data Explorer")
 
