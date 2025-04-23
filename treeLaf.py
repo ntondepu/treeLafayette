@@ -1,4 +1,3 @@
-# import statements
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -43,8 +42,8 @@ summary_df = load_data(default_summary_path, "csv", "summary_file_uploader")
 greenbush_df = load_data(default_greenbush_path, "csv", "greenbush_file_uploader")
 
 # --- Streamlit Tabs ---
-overview_tab, survival_tab, map_tab, explorer_tab = st.tabs([
-    "Overview", "Survival Analysis", "Geographic View", "Data Explorer"
+overview_tab, survival_tab, map_tab, explorer_tab, correlation_tab = st.tabs([
+    "Overview", "Survival Analysis", "Geographic View", "Data Explorer", "Correlation Explorer"
 ])
 
 # --- 1. Overview Tab ---
@@ -137,7 +136,7 @@ with map_tab:
     else:
         st.info("Map requires 'Latitude', 'Longitude', 'Species', 'Survival Rate (%)', and 'Year Planted' columns.")
 
-# --- 4. Data Explorer --- 
+# --- 4. Data Explorer ---
 with explorer_tab:
     st.header("Data Explorer")
 
@@ -149,4 +148,75 @@ with explorer_tab:
         st.dataframe(summary_df)
     else:
         st.dataframe(greenbush_df)
- 
+
+# --- 5. Correlation Explorer ---
+with correlation_tab:
+    st.header("Correlation Explorer")
+
+    # Compute Survival Rate (%) if possible
+    if "Number alive" in summary_df.columns and "Number planted" in summary_df.columns:
+        summary_df["Survival Rate (%)"] = (summary_df["Number alive"] / summary_df["Number planted"]) * 100
+    else:
+        st.warning("Missing columns: 'Number alive' or 'Number planted' to compute survival rate.")
+    
+    # Compute Survival Rate (%) if possible (for summary_df)
+    if "Number alive" in summary_df.columns and "Number planted" in summary_df.columns:
+        summary_df["Survival Rate (%)"] = (summary_df["Number alive"] / summary_df["Number planted"]) * 100
+    else:
+        st.warning("Missing columns: 'Number alive' or 'Number planted' to compute survival rate.")
+
+    # Compute Survival Rate (%) if possible (for planting_df)
+    if "Number alive" in summary_df.columns and "Number planted" in summary_df.columns:
+        planting_df["Survival Rate (%)"] = (planting_df["Number alive"] / planting_df["Number planted"]) * 100
+    else:
+        st.warning("Missing columns: 'Number alive' or 'Number planted' to compute survival rate.")
+
+    # Compute native (%) if possible
+    if "Native" in summary_df.columns and "Exotic" in summary_df.columns:
+        summary_df["Native (%)"] = 100 * (summary_df["Native"] / ((summary_df["Native"]) + summary_df["Exotic"]))
+    else:
+        st.warning("Missing columns: 'Exotic' or 'Native' to compute survival rate.")
+
+    # Compute Good/Exc (%) if possible
+    if "No. Exc, Good" in summary_df.columns and "No. Fair, Poor" in summary_df.columns:
+        summary_df["Good/Exc (%)"] = 100 * (summary_df["No. Exc, Good"] / (summary_df["No. Exc, Good"] + summary_df["No. Fair, Poor"]))
+    else:
+        st.warning("Missing columns: 'No. Exc, Good' or 'No. Fair, Poor.")
+
+    st.write("Pick a field to correlate with year planted")
+    selected_col = st.selectbox("Choose a field", ["Trk diam (in.)", "Growth rate (in./y)"])
+    if selected_col == "Trk diam (in.)":
+        fig = px.scatter(
+            planting_df, x='Yr planted', y='Trk diam (in.)', opacity=0.65,
+            trendline='ols', trendline_color_override='darkblue'
+        )
+    else:
+        fig = px.scatter(
+            planting_df, x='Yr planted', y='Growth rate (in./y)', opacity=0.65,
+            trendline='ols', trendline_color_override='darkblue'
+        )
+    st.plotly_chart(fig)
+
+
+    
+    st.write("Pick a field to correlate with survival rate (%)")
+    selected_col2 = st.selectbox("Choose a field", ["Native (%)", "Growth rate (in./y)", "Good/Exc (%)"])
+    if selected_col2 == "Native (%)":
+        fig2 = px.scatter(
+            summary_df, x='Native (%)', y='Survival Rate (%)', opacity=0.65,
+            trendline='ols', trendline_color_override='darkblue'
+        )
+    elif selected_col2 == "Good/Exc (%)":
+        fig2 = px.scatter(
+            summary_df, x='Good/Exc (%)', y='Survival Rate (%)', opacity=0.65,
+            trendline='ols', trendline_color_override='darkblue'
+        )
+    else: 
+        fig2 = px.scatter(
+            planting_df, x='Growth rate (in./y)', y='Survival Rate (%)', opacity=0.65,
+            trendline='ols', trendline_color_override='darkblue'
+        )
+    st.plotly_chart(fig2)
+
+
+
