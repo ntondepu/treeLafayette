@@ -138,26 +138,6 @@ with map_tab:
     heat_fig = px.density_heatmap(planting_df, title="Survival Rates at Planting Sites", x="Site", y="Survival Rate (%)", color_continuous_scale="Viridis")
     st.plotly_chart(heat_fig)
 
-
-    if {"Latitude", "Longitude", "Species", "Survival Rate (%)", "Year Planted"}.issubset(planting_df.columns):
-        selected_species = st.selectbox("Filter by species", planting_df["Species"].unique())
-        filtered_map_df = planting_df[planting_df["Species"] == selected_species]
-
-        fig_map = px.scatter_mapbox(
-            filtered_map_df,
-            lat="Latitude",
-            lon="Longitude",
-            color="Survival Rate (%)",
-            size_max=15,
-            zoom=11,
-            mapbox_style="open-street-map",
-            hover_name="Species",
-            hover_data=["Site", "Year Planted"]
-        )
-        st.plotly_chart(fig_map)
-    else:
-        st.info("Map requires 'Latitude', 'Longitude', 'Species', 'Survival Rate (%)', and 'Year Planted' columns.")
-
 # --- 4. Data Explorer ---
 with explorer_tab:
     st.header("Data Explorer")
