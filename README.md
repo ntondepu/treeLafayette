@@ -1,20 +1,22 @@
-# Tree Lafayette Survival Analysis
+# Tree Planting & Survival Dashboard
 
-This repository contains a Streamlit dashboard for analyzing tree planting and survival data in Lafayette. The goal of the project is to help visualize trends in tree survival rates by location, year, and species, using data from local planting efforts.
+This Streamlit application provides an interactive dashboard for exploring tree planting and survival data in Lafayette, Indiana. It is designed to help visualize species diversity, planting trends, survival rates, and site-level statistics.
 
 ## Features
 
-- Survival rate analysis by site and year using summarized data
-- Survival rate analysis by species using planting data
-- Automatic column renaming and formatting for clarity
-- Graceful handling of missing or incomplete data
-- Interactive plots with Streamlit's built-in charting tools
+- Overview metrics including total trees planted and average survival rate
+- Species breakdown and yearly planting trends
+- Survival analysis by species, site, and year
+- Geographic visualization of tree distribution and survival rates
+- Raw data table explorer
+- Correlation analysis between survival and other variables such as nativity, diameter, and health
 
-## How to Run
+## Datasets
 
-1. Clone the repository:
+The app loads the following default datasets:
 
-```bash
-git clone https://github.com/yourusername/tree-lafayette.git
-cd tree-lafayette
+- `tree_survival_summary.csv`
+- `inventory_site_codes.csv`
+- `greenbush_trees.csv`
 
+Users may optionally upload their own `.csv` or `.xlsx` files to replace the defaults through the sidebar controls.
