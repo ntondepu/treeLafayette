@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from geopy.geocoders import Nominatim
 
 # --- Data Loading Function ---
 def load_data(default_path: str, file_type: str = "csv", key: str = "data_file_uploader"):
@@ -83,9 +84,15 @@ with survival_tab:
     }
     summary_df.rename(columns=column_renames, inplace=True)
 
-    # Compute Survival Rate (%) if possible
+    # Compute Survival Rate (%) if possible (for summary_df)
     if "Number alive" in summary_df.columns and "Number planted" in summary_df.columns:
         summary_df["Survival Rate (%)"] = (summary_df["Number alive"] / summary_df["Number planted"]) * 100
+    else:
+        st.warning("Missing columns: 'Number alive' or 'Number planted' to compute survival rate.")
+
+    # Compute Survival Rate (%) if possible (for planting_df)
+    if "Number alive" in planting_df.columns and "Number planted" in planting_df.columns:
+        planting_df["Survival Rate (%)"] = (planting_df["Number alive"] / planting_df["Number planted"]) * 100
     else:
         st.warning("Missing columns: 'Number alive' or 'Number planted' to compute survival rate.")
 
@@ -115,8 +122,12 @@ with survival_tab:
         
 # --- 3. Geographic View ---
 with map_tab:
-    st.header("Geographic View")
+    st.header("Geographic View (Planting Data)")
 
+    # append lafayette to each street address (assume location in lafayette)
+    if "Site" in planting_df.columns:
+        planting_df['Full Address'] = planting_df['Site'] + ", Lafayette, IN"
+        
     if {"Latitude", "Longitude", "Species", "Survival Rate (%)", "Year Planted"}.issubset(planting_df.columns):
         selected_species = st.selectbox("Filter by species", planting_df["Species"].unique())
         filtered_map_df = planting_df[planting_df["Species"] == selected_species]
@@ -197,8 +208,6 @@ with correlation_tab:
         )
     st.plotly_chart(fig)
 
-
-    
     st.write("Pick a field to correlate with survival rate (%)")
     selected_col2 = st.selectbox("Choose a field", ["Native (%)", "Growth rate (in./y)", "Good/Exc (%)"])
     if selected_col2 == "Native (%)":
@@ -217,6 +226,9 @@ with correlation_tab:
             trendline='ols', trendline_color_override='darkblue'
         )
     st.plotly_chart(fig2)
+
+
+
 
 
 
