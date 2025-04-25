@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from geopy.geocoders import Nominatim
 
 # --- Data Loading Function ---
 def load_data(default_path: str, file_type: str = "csv", key: str = "data_file_uploader"):
@@ -127,7 +126,19 @@ with map_tab:
     # append lafayette to each street address (assume location in lafayette)
     if "Site" in planting_df.columns:
         planting_df['Full Address'] = planting_df['Site'] + ", Lafayette, IN"
-        
+
+    # show tree count per site
+    if "Site" in planting_df.columns:
+        site_counts = planting_df["Site"].value_counts().reset_index()
+        site_counts.columns = ["Site", "Count"]
+        fig = px.bar(site_counts, x="Site", y="Count", title="Tree Count by Site")
+        st.plotly_chart(fig)
+
+    # use heatmap to illustrate most common survival rate/site planting combo
+    heat_fig = px.density_heatmap(planting_df, title="Survival Rates at Planting Sites", x="Site", y="Survival Rate (%)", color_continuous_scale="Viridis")
+    st.plotly_chart(heat_fig)
+
+
     if {"Latitude", "Longitude", "Species", "Survival Rate (%)", "Year Planted"}.issubset(planting_df.columns):
         selected_species = st.selectbox("Filter by species", planting_df["Species"].unique())
         filtered_map_df = planting_df[planting_df["Species"] == selected_species]
