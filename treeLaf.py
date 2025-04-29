@@ -16,32 +16,26 @@ st.markdown(
     """
     <style>
     body {
-        background-color: #228B22; /* Forest Green background */
+        background-color: #f0f5f0;
+    }
+    .css-1d391kg, .css-1v3fvcr {
+        background-color: #0b3d0b !important;
         color: white;
     }
-    .stApp {
-        background-color: #228B22; /* Forest Green background */
-    }
-    .css-18e3th9 {
-        background-color: #228B22; /* Forest Green for main container */
-    }
     .stButton>button {
-        background-color: #0b3d0b;
+        background-color: #228B22;
         color: white;
     }
     .stTabs [role="tab"] {
-        background-color: #2e8b57;
+        background-color: #e0f2e9;
         padding: 10px;
         margin-right: 10px;
         border-radius: 10px;
-        color: white;
+        color: black;
     }
     .stTabs [role="tab"][aria-selected="true"] {
-        background-color: #006400;
+        background-color: #228B22;
         color: white;
-    }
-    .css-1v3fvcr, .css-1d391kg {
-        background-color: transparent; /* Make sidebar transparent */
     }
     </style>
     """,
@@ -51,6 +45,15 @@ st.markdown(
 # --- Dashboard Header ---
 st.title("🌳 Tree Planting & Survival Dashboard")
 st.caption("This Streamlit application provides an interactive dashboard for exploring tree planting and survival data in Lafayette, Indiana.")
+st.markdown("""
+**Features**  
+- Overview metrics including total trees planted and average survival rate  
+- Species breakdown and yearly planting trends  
+- Survival analysis by species, site, and year  
+- Geographic visualization of tree distribution and survival rates  
+- Raw data table explorer  
+- Correlation analysis between survival and other variables such as nativity, diameter, and health  
+st.markdown("---")
 
 # --- Data Loading Function ---
 def load_data(default_path: str, file_type: str = "csv", key: str = "data_file_uploader"):
