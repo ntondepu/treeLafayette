@@ -52,7 +52,7 @@ st.markdown("""
 - Survival analysis by species, site, and year  
 - Geographic visualization of tree distribution and survival rates  
 - Raw data table explorer  
-- Correlation analysis between survival and other variables such as nativity, diameter, and health  
+- Correlation analysis between survival and other variables such as nativity, diameter, and health""")
 st.markdown("---")
 
 # --- Data Loading Function ---
