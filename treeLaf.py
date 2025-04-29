@@ -2,6 +2,68 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+
+# --- Page Config ---
+st.set_page_config(
+    page_title="Tree Planting & Survival Dashboard 🌳",
+    page_icon="🌳",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# --- Custom CSS for Dark Green Theme ---
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #f0f5f0;
+    }
+    .css-1d391kg, .css-1v3fvcr {
+        background-color: #0b3d0b !important;
+        color: white;
+    }
+    .stButton>button {
+        background-color: #228B22;
+        color: white;
+    }
+    .stTabs [role="tab"] {
+        background-color: #e0f2e9;
+        padding: 10px;
+        margin-right: 10px;
+        border-radius: 10px;
+        color: black;
+    }
+    .stTabs [role="tab"][aria-selected="true"] {
+        background-color: #228B22;
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# --- Dashboard Header ---
+st.title("🌳 Tree Planting & Survival Dashboard")
+st.caption("This Streamlit application provides an interactive dashboard for exploring tree planting and survival data in Lafayette, Indiana.")
+st.markdown("""
+**Features**  
+- Overview metrics including total trees planted and average survival rate  
+- Species breakdown and yearly planting trends  
+- Survival analysis by species, site, and year  
+- Geographic visualization of tree distribution and survival rates  
+- Raw data table explorer  
+- Correlation analysis between survival and other variables such as nativity, diameter, and health  
+
+**Datasets**  
+The app loads the following default datasets:  
+- `tree_survival_summary.csv`  
+- `inventory_site_codes.csv`  
+- `greenbush_trees.csv`  
+
+*Users may upload their own .csv or .xlsx files to override the defaults through sidebar controls.*
+""")
+st.markdown("---")
+
 # --- Data Loading Function ---
 def load_data(default_path: str, file_type: str = "csv", key: str = "data_file_uploader"):
     uploaded_file = st.sidebar.file_uploader(
